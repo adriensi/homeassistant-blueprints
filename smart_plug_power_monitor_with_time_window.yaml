@@ -1,6 +1,7 @@
 blueprint:
-  name: Turn off device after a certain time with little power draw
-  description: This is a blueprint to turn off a smart plug after the power draw has been low for a certain time. It’s useful for devices that draw significant power in standby, like PCs.
+  name: Low Power Auto-Shutoff Timer
+  description: Home Assistant Blueprint that Automates smart plug shutoff based on low power draw within a defined time window for energy efficiency. Extends CWagner's initial Blueprint
+
   domain: automation
   input:
     power_sensor:
