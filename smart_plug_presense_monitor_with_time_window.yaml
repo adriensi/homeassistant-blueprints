@@ -1,0 +1,60 @@
+blueprint:
+  name: Low Power Auto-Shutoff Timer
+  description: Home Assistant Blueprint that Automates smart plug shutoff based on low power draw within a defined time window for energy efficiency. Extends CWagner's initial Blueprint
+
+    domain: automation
+  input:
+    trigger_device:
+      name: Trigger Device
+      description: Choose a device_tracker or binary_sensor to trigger the automation.
+      selector:
+        entity:
+          domain: 
+            - device_tracker
+            - binary_sensor
+    device_absent_state:
+      name: Device Absent State
+      description: State of the device indicating absence ('not_home' for device_tracker, 'off' for binary_sensor).
+      default: 'not_home'
+    smart_plug_switch:
+      name: Target Smart Plug
+      description: This smart plug will be turned off once the condition is met.
+      selector:
+        entity:
+          domain: switch
+    off_delay:
+      name: Wait Time
+      description: Time the device needs to be in the absent state for the automation to trigger.
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 60
+          unit_of_measurement: minutes
+    time_window_start:
+      name: Time Window Start
+      description: Start time of the window during which the automation is allowed to run.
+      default: '22:00:00'
+      selector:
+        time: {}
+    time_window_end:
+      name: Time Window End
+      description: End time of the window during which the automation is allowed to run.
+      default: '06:00:00'
+      selector:
+        time: {}
+trigger:
+  platform: state
+  entity_id: !input trigger_device
+  to: !input device_absent_state
+  for:
+    minutes: !input off_delay
+condition:
+  - condition: time
+    after: !input time_window_start
+    before: !input time_window_end
+action:
+  - service: switch.turn_off
+    data:
+      entity_id: !input smart_plug_switch
+mode: single
