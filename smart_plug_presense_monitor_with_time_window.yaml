@@ -1,5 +1,5 @@
 blueprint:
-  name: Low Power Auto-Shutoff Timer
+  name: No presense Auto-Shutoff Timer
   description: Home Assistant Blueprint that Automates smart plug shutoff based on low power draw within a defined time window for energy efficiency. Extends CWagner's initial Blueprint
 
   domain: automation
