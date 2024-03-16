@@ -1,6 +1,6 @@
 blueprint:
   name: No presense Auto-Shutoff Timer
-  description: Home Assistant Blueprint that automates smart plug shutoff based on a configurable device state within a defined time window for energy efficiency. Extends CWagner's initial Blueprint
+  description: Home Assistant Blueprint that Automates smart plug shutoff based on low power draw within a defined time window for energy efficiency. Extends CWagner's initial Blueprint
 
   domain: automation
   input:
@@ -12,10 +12,10 @@ blueprint:
           domain: 
             - device_tracker
             - binary_sensor
-    trigger_state:
-      name: Trigger State
-      description: Configurable state of the trigger device to initiate the automation.
-      default: 'off'
+    device_absent_state:
+      name: Device Absent State
+      description: State of the device indicating absence ('not_home' for device_tracker, 'off' for binary_sensor).
+      default: 'not_home'
     smart_plug_switch:
       name: Target Smart Plug
       description: This smart plug will be turned off once the condition is met.
@@ -24,7 +24,7 @@ blueprint:
           domain: switch
     off_delay:
       name: Wait Time
-      description: Time the device needs to be in the trigger state for the automation to trigger.
+      description: Time the device needs to be in the absent state for the automation to trigger.
       default: 10
       selector:
         number:
@@ -43,36 +43,23 @@ blueprint:
       default: '06:00:00'
       selector:
         time: {}
-    check_state:
-      name: Check State
-      description: Enable or disable the state check within the actions.
-      default: true
-      selector:
-        boolean: {}
 trigger:
   - platform: state
     entity_id: !input trigger_device
-    to: !input trigger_state
+    to: !input device_absent_state
     for:
       minutes: !input off_delay
   - platform: time_pattern
+    # Dieser Trigger aktiviert die Überprüfung jede Minute, kann je nach Bedarf angepasst werden
     minutes: '/1'
 condition:
   - condition: time
     after: !input time_window_start
     before: !input time_window_end
 action:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ is_state(trigger_device, trigger_state) }}"
-        sequence:
-          - service: switch.turn_off
-            data:
-              entity_id: !input smart_plug_switch
-    default: []
-  - condition: template
-    value_template: "{{ is_state(trigger_device, trigger_state) or not check_state }}"
+  - condition: state
+    entity_id: !input trigger_device
+    state: !input device_absent_state
   - service: switch.turn_off
     data:
       entity_id: !input smart_plug_switch
