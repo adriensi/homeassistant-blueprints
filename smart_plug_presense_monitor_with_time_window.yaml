@@ -12,10 +12,10 @@ blueprint:
           domain: 
             - device_tracker
             - binary_sensor
-    device_absent_state:
-      name: Device Absent State
-      description: State of the device indicating absence ('not_home' for device_tracker, 'off' for binary_sensor).
-      default: 'not_home'
+    trigger_state:
+      name: Trigger State
+      description: Configurable state of the trigger device to initiate the automation.
+      default: 'off'
     smart_plug_switch:
       name: Target Smart Plug
       description: This smart plug will be turned off once the condition is met.
@@ -24,7 +24,7 @@ blueprint:
           domain: switch
     off_delay:
       name: Wait Time
-      description: Time the device needs to be in the absent state for the automation to trigger.
+      description: Time the device needs to be in the trigger state for the automation to trigger.
       default: 10
       selector:
         number:
@@ -45,18 +45,17 @@ blueprint:
         time: {}
     check_state:
       name: Check State
-      description: Enable or disable the state check within the actions (so action is triggered, also when trigger device stays continuously off).
+      description: Enable or disable the state check within the actions.
       default: true
       selector:
         boolean: {}
 trigger:
   - platform: state
     entity_id: !input trigger_device
-    to: !input device_absent_state
+    to: !input trigger_state
     for:
       minutes: !input off_delay
   - platform: time_pattern
-    # Dieser Trigger aktiviert die Überprüfung jede Minute, kann je nach Bedarf angepasst werden
     minutes: '/1'
 condition:
   - condition: time
