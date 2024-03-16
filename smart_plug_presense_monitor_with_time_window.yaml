@@ -54,6 +54,9 @@ condition:
     after: !input time_window_start
     before: !input time_window_end
 action:
+  - condition: state
+    entity_id: !input trigger_device
+    state: !input device_absent_state
   - service: switch.turn_off
     data:
       entity_id: !input smart_plug_switch
