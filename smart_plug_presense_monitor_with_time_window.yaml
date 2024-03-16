@@ -48,18 +48,20 @@ trigger:
     entity_id: !input trigger_device
     to: !input device_absent_state
     for:
-      minutes: !input off_delay
+      minutes: !input off_delay  # Verwendet den Wert von off_delay für die Wartezeit
   - platform: time_pattern
-    # Dieser Trigger aktiviert die Überprüfung jede Minute, kann je nach Bedarf angepasst werden
     minutes: '/1'
+
 condition:
   - condition: time
     after: !input time_window_start
     before: !input time_window_end
+
 action:
-  - condition: state
-    entity_id: !input trigger_device
-    state: !input device_absent_state
+  - condition: template  # Verwendet eine Template-Bedingung, um zu überprüfen, ob der Trigger-Device für off_delay Minuten im device_absent_state war
+    value_template: >
+      {{ is_state(trigger_device, device_absent_state) and
+         (as_timestamp(now()) - as_timestamp(states[trigger_device].last_changed)) >= (off_delay * 60) }}
   - service: switch.turn_off
     data:
       entity_id: !input smart_plug_switch
