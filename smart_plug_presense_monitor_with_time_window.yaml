@@ -58,11 +58,16 @@ condition:
     before: !input time_window_end
 
 action:
-  - condition: template  # Verwendet eine Template-Bedingung, um zu überprüfen, ob der Trigger-Device für off_delay Minuten im device_absent_state war
+  - variables:
+      trigger_device: !input trigger_device
+      device_absent_state: !input device_absent_state
+      off_delay: !input off_delay
+  - condition: template
     value_template: >
       {{ is_state(trigger_device, device_absent_state) and
          (as_timestamp(now()) - as_timestamp(states[trigger_device].last_changed)) >= (off_delay * 60) }}
   - service: switch.turn_off
-    data:
+    target:
       entity_id: !input smart_plug_switch
+      
 mode: single
