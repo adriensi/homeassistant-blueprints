@@ -44,11 +44,14 @@ blueprint:
       selector:
         time: {}
 trigger:
-  platform: state
-  entity_id: !input trigger_device
-  to: !input device_absent_state
-  for:
-    minutes: !input off_delay
+  - platform: state
+    entity_id: !input trigger_device
+    to: !input device_absent_state
+    for:
+      minutes: !input off_delay
+  - platform: time_pattern
+    # Dieser Trigger aktiviert die Überprüfung jede Minute, kann je nach Bedarf angepasst werden
+    minutes: '/1'
 condition:
   - condition: time
     after: !input time_window_start
