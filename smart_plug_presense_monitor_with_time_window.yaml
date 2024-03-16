@@ -1,36 +1,21 @@
 blueprint:
   name: No presense Auto-Shutoff Timer
-  description: Home Assistant Blueprint that Automates smart plug shutoff based on low power draw within a defined time window for energy efficiency. Extends CWagner's initial Blueprint
+  description: Automates smart plug shutoff 10 minutes after the defined time window starts or after the device turns off within the time window for energy efficiency. Extends CWagner's initial Blueprint.
 
   domain: automation
   input:
     trigger_device:
       name: Trigger Device
-      description: Choose a device_tracker or binary_sensor to trigger the automation.
+      description: Choose a binary_sensor to trigger the automation.
       selector:
         entity:
-          domain: 
-            - device_tracker
-            - binary_sensor
-    device_absent_state:
-      name: Device Absent State
-      description: State of the device indicating absence ('not_home' for device_tracker, 'off' for binary_sensor).
-      default: 'not_home'
+          domain: binary_sensor
     smart_plug_switch:
       name: Target Smart Plug
-      description: This smart plug will be turned off once the condition is met.
+      description: This smart plug will be turned off 10 minutes after the condition is met.
       selector:
         entity:
           domain: switch
-    off_delay:
-      name: Wait Time
-      description: Time the device needs to be in the absent state for the automation to trigger.
-      default: 10
-      selector:
-        number:
-          min: 1
-          max: 60
-          unit_of_measurement: minutes
     time_window_start:
       name: Time Window Start
       description: Start time of the window during which the automation is allowed to run.
@@ -43,14 +28,15 @@ blueprint:
       default: '06:00:00'
       selector:
         time: {}
+
 trigger:
+  - platform: time
+    at: input_datetime.time_window_start
   - platform: state
     entity_id: !input trigger_device
-    to: !input device_absent_state
+    to: 'off'
     for:
-      minutes: !input off_delay  # Verwendet den Wert von off_delay für die Wartezeit
-  - platform: time_pattern
-    minutes: '/1'
+      minutes: 10
 
 condition:
   - condition: time
@@ -58,16 +44,8 @@ condition:
     before: !input time_window_end
 
 action:
-  - variables:
-      trigger_device: !input trigger_device
-      device_absent_state: !input device_absent_state
-      off_delay: !input off_delay
-  - condition: template
-    value_template: >
-      {{ is_state(trigger_device, device_absent_state) and
-         (as_timestamp(now()) - as_timestamp(states[trigger_device].last_changed)) >= (off_delay * 60) }}
   - service: switch.turn_off
     target:
       entity_id: !input smart_plug_switch
-      
+
 mode: single
